@@ -1,0 +1,98 @@
+#!/usr/bin/env ruby
+
+$LOAD_PATH.unshift File.expand_path(File.join(File.dirname(__FILE__), "lib"))
+require 'api'
+require 'gli'
+
+include GLI::App
+
+@options = YAML.load(File.read('config.yaml'))
+
+program_desc 'Puppet Management Tool'
+
+desc 'Manage Certificates'
+command :cert do |c|
+
+  cert = Api::Certs.new(@options)
+
+  c.desc 'List all Certificates'
+  c.command :listall do |listall|
+    listall.action do
+      puts "All Certificates"
+      puts "---"
+      cert.listcerts.each do |x|
+        puts "name: #{x['name']}"
+        puts "  status: #{x['state']}"
+      end
+    end # listall.action
+  end # command :listall
+      
+  c.desc 'List all Certificate Requests'
+  c.command :list do |list|
+    list.action do
+      puts "Certificate Requests"
+      puts "---"
+      YAML.load(cert.listcertreqs).each do |x|
+        puts "name: #{x.name}"
+      end
+    end # list.action
+  end # command :list
+      
+  c.desc 'Sign Certificate Request'
+  c.command :sign do |sign|
+    sign.action do |global_options,options,args|
+      puts "signed: #{YAML.load(cert.signcert(args[0])).name}"
+    end # sign.action
+  end # command :sign
+
+  c.desc 'Certificate Info'
+  c.command :info do |info|
+    info.action do |global_options,options,args|
+      puts cert.checkhost(args[0])
+    end # info.action
+  end # command :info
+      
+  c.desc 'Delete Certificate'
+  c.command [:delete,:del] do |delete|
+    delete.action do |global_options,options,args|
+      puts cert.cleancert(args[0])
+    end # delete.action
+  end # command :delete
+
+  c.default_command :list
+      
+end # command :cert
+
+
+desc 'Manage Code'
+command :code do |c|
+
+  c.desc 'Download Code'
+  c.command :download do |download|
+    download.action do |global_options,options,args|
+      git = Api::Code.new(@options)
+      puts git.download
+    end # download.action
+  end # command :download
+
+  c.desc 'Commit Code'
+  c.command :commit do |commit|
+    commit.action do |global_options,options,args|
+      git = Api::Code.new(@options)
+      puts git.commit(args[0])
+    end # commit.action
+  end # command :commit
+
+  c.desc 'Publish Code'
+  c.command :publish do |publish|
+    publish.action do |global_options,options,args|
+      git = Api::Code.new(@options)
+      puts git.publish
+    end # publish.action
+  end # command :publish
+
+  c.default_command :download
+
+end # command :code
+
+exit run(ARGV)

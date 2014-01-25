@@ -1,0 +1,9 @@
+---
+client_key: certs/ssl_key.pem
+client_cert: certs/ssl_cert.pem
+ca_cert: certs/ca.pem
+hostname: master01.example.com
+environment: production
+port: 8140
+codepath: ./code
+repo: puppet
